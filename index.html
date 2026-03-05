@@ -35,13 +35,21 @@ const video = document.getElementById("video");
 const liveRef = ref(db,"live/data");
 
 let currentIndex = 0;
-let ready = false;
 
 // sincronizar
 onValue(liveRef,(snap)=>{
 
 const data = snap.val();
-if(!data) return;
+
+if(!data){
+
+video.src = videos[0];
+video.currentTime = 0;
+video.play();
+
+return;
+
+}
 
 currentIndex = data.videoIndex;
 
@@ -53,16 +61,12 @@ video.onloadeddata = () => {
 video.currentTime = data.currentTime;
 video.play();
 
-ready = true;
-
 };
 
 });
 
 // enviar tempo
 setInterval(()=>{
-
-if(!ready) return;
 
 set(liveRef,{
 videoIndex: currentIndex,
@@ -71,7 +75,7 @@ currentTime: video.currentTime
 
 },2000);
 
-// trocar episódio
+// próximo vídeo
 video.onended = () => {
 
 currentIndex++;
@@ -81,7 +85,6 @@ currentIndex = 0;
 }
 
 video.src = videos[currentIndex];
-video.load();
 video.play();
 
 };
