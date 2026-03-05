@@ -36,41 +36,43 @@ const liveRef = ref(db,"live/data");
 
 let currentIndex = 0;
 
-// 🔊 ativar som quando tocar na tela
+const isController = window.location.search.includes("control");
+
+// som quando tocar
 document.body.addEventListener("click", () => {
   video.muted = false;
 });
 
-// sincronizar
+// ESPECTADORES
 onValue(liveRef,(snap)=>{
 
 const data = snap.val();
+if(!data) return;
 
-if(!data){
-
-video.src = videos[0];
-video.currentTime = 0;
-video.play();
-
-return;
-
-}
+if(!isController){
 
 currentIndex = data.videoIndex;
 
+if(video.src !== videos[currentIndex]){
 video.src = videos[currentIndex];
-video.load();
+}
 
-video.onloadeddata = () => {
-
+if(Math.abs(video.currentTime - data.currentTime) > 2){
 video.currentTime = data.currentTime;
+}
+
 video.play();
 
-};
+}
 
 });
 
-// enviar tempo
+// CONTROLADOR
+if(isController){
+
+video.src = videos[currentIndex];
+video.play();
+
 setInterval(()=>{
 
 set(liveRef,{
@@ -80,8 +82,7 @@ currentTime: video.currentTime
 
 },2000);
 
-// próximo vídeo
-video.onended = () => {
+video.onended = ()=>{
 
 currentIndex++;
 
@@ -93,6 +94,8 @@ video.src = videos[currentIndex];
 video.play();
 
 };
+
+}
 
 </script>
 
