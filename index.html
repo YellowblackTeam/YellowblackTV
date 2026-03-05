@@ -2,8 +2,9 @@
 <html>
 <body style="margin:0;background:black;">
 
-<video id="video" autoplay muted playsinline
-style="width:100vw;height:100vh;object-fit:contain;"></video>
+<video id="video"
+style="width:100vw;height:100vh;object-fit:contain;"
+autoplay muted playsinline preload="auto"></video>
 
 <script type="module">
 
@@ -36,7 +37,7 @@ const liveRef = ref(db,"live/data");
 let currentIndex = 0;
 let ready = false;
 
-// recebe estado do firebase
+// sincronizar
 onValue(liveRef,(snap)=>{
 
 const data = snap.val();
@@ -45,18 +46,20 @@ if(!data) return;
 currentIndex = data.videoIndex;
 
 video.src = videos[currentIndex];
+video.load();
 
-video.addEventListener("loadedmetadata",()=>{
+video.onloadeddata = () => {
 
 video.currentTime = data.currentTime;
 video.play();
+
 ready = true;
 
-},{once:true});
+};
 
 });
 
-// envia tempo
+// enviar tempo
 setInterval(()=>{
 
 if(!ready) return;
@@ -68,8 +71,8 @@ currentTime: video.currentTime
 
 },2000);
 
-// troca vídeo automaticamente
-video.addEventListener("ended",()=>{
+// trocar episódio
+video.onended = () => {
 
 currentIndex++;
 
@@ -78,9 +81,10 @@ currentIndex = 0;
 }
 
 video.src = videos[currentIndex];
+video.load();
 video.play();
 
-});
+};
 
 </script>
 
