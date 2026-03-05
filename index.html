@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<body style="margin:0;background:black;">
+
+<video id="video" autoplay muted playsinline style="width:100vw;height:100vh;object-fit:contain;"></video>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA86VqCUe9Yve9_zI0U07_hPTic4AB2erc",
+  authDomain: "yellowblacktv.firebaseapp.com",
+  databaseURL: "https://yellowblacktv-default-rtdb.firebaseio.com/",
+  projectId: "yellowblacktv",
+  storageBucket: "yellowblacktv.firebasestorage.app",
+  messagingSenderId: "625587494965",
+  appId: "1:625587494965:web:4f15a8185e00fe508bd17c"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const videos = [
+"https://dn721808.ca.archive.org/0/items/bdmv-hoshi-no-kirby-hd-remaster/%5BBDMV%5D%20Hoshi%20no%20Kirby%20HD%20Remaster/Disc%201/BDMV/STREAM/00000.mp4",
+"https://dn721808.ca.archive.org/0/items/bdmv-hoshi-no-kirby-hd-remaster/%5BBDMV%5D%20Hoshi%20no%20Kirby%20HD%20Remaster/Disc%201/BDMV/STREAM/00001.mp4",
+"https://dn721808.ca.archive.org/0/items/bdmv-hoshi-no-kirby-hd-remaster/%5BBDMV%5D%20Hoshi%20no%20Kirby%20HD%20Remaster/Disc%201/BDMV/STREAM/00002.mp4",
+"https://dn721808.ca.archive.org/0/items/bdmv-hoshi-no-kirby-hd-remaster/%5BBDMV%5D%20Hoshi%20no%20Kirby%20HD%20Remaster/Disc%201/BDMV/STREAM/00003.mp4"
+];
+
+const video = document.getElementById("video");
+
+const liveRef = ref(db,"live/data");
+
+let currentIndex = 0;
+
+video.src = videos[currentIndex];
+
+// envia tempo
+setInterval(()=>{
+
+set(liveRef,{
+videoIndex: currentIndex,
+currentTime: video.currentTime
+});
+
+},2000);
+
+// troca vídeo
+video.addEventListener("ended",()=>{
+
+currentIndex++;
+
+if(currentIndex >= videos.length){
+currentIndex = 0;
+}
+
+video.src = videos[currentIndex];
+video.play();
+
+});
+
+// sincroniza
+onValue(liveRef,(snap)=>{
+
+const data = snap.val();
+if(!data) return;
+
+if(currentIndex !== data.videoIndex){
+
+currentIndex = data.videoIndex;
+video.src = videos[currentIndex];
+
+}
+
+if(Math.abs(video.currentTime - data.currentTime) > 2){
+
+video.currentTime = data.currentTime;
+
+}
+
+});
+</script>
+
+</body>
+</html>
