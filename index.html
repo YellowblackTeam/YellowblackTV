@@ -2,9 +2,11 @@
 <html>
 <body style="margin:0;background:black;">
 
-<video id="video" autoplay muted playsinline style="width:100vw;height:100vh;object-fit:contain;"></video>
+<video id="video" autoplay muted playsinline
+style="width:100vw;height:100vh;object-fit:contain;"></video>
 
 <script type="module">
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
@@ -29,15 +31,35 @@ const videos = [
 ];
 
 const video = document.getElementById("video");
-
 const liveRef = ref(db,"live/data");
 
 let currentIndex = 0;
+let ready = false;
+
+// recebe estado do firebase
+onValue(liveRef,(snap)=>{
+
+const data = snap.val();
+if(!data) return;
+
+currentIndex = data.videoIndex;
 
 video.src = videos[currentIndex];
 
+video.addEventListener("loadedmetadata",()=>{
+
+video.currentTime = data.currentTime;
+video.play();
+ready = true;
+
+},{once:true});
+
+});
+
 // envia tempo
 setInterval(()=>{
+
+if(!ready) return;
 
 set(liveRef,{
 videoIndex: currentIndex,
@@ -46,7 +68,7 @@ currentTime: video.currentTime
 
 },2000);
 
-// troca vídeo
+// troca vídeo automaticamente
 video.addEventListener("ended",()=>{
 
 currentIndex++;
@@ -60,26 +82,6 @@ video.play();
 
 });
 
-// sincroniza
-onValue(liveRef,(snap)=>{
-
-const data = snap.val();
-if(!data) return;
-
-if(currentIndex !== data.videoIndex){
-
-currentIndex = data.videoIndex;
-video.src = videos[currentIndex];
-
-}
-
-if(Math.abs(video.currentTime - data.currentTime) > 2){
-
-video.currentTime = data.currentTime;
-
-}
-
-});
 </script>
 
 </body>
